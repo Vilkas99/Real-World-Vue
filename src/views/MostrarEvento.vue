@@ -1,24 +1,24 @@
 <template>
   <div>
     <div class="event-header">
-      <span class="eyebrow">@{{ event.time }} on {{ event.date }}</span>
-      <h1 class="title">{{ event.title }}</h1>
-      <h5>Organized by {{ event.organizer }}</h5>
-      <h5>Category: {{ event.category }}</h5>
+      <span class="eyebrow">@{{ evento.time }} on {{ evento.date }}</span>
+      <h1 class="title">{{ evento.title }}</h1>
+      <h5>Organized by {{ evento.organizer ? evento.organizer.name : '' }}</h5>
+      <h5>Category: {{ evento.category }}</h5>
     </div>
     <BaseIcon name="map"><h2>Location</h2></BaseIcon>
-    <address>{{ event.location }}</address>
+    <address>{{ evento.location }}</address>
     <h2>Event details</h2>
-    <p>{{ event.description }}</p>
+    <p>{{ evento.description }}</p>
     <h2>
       Attendees
       <span class="badge -fill-gradient">{{
-        event.attendees ? event.attendees.length : 0
+        evento.attendees ? evento.attendees.length : 0
       }}</span>
     </h2>
     <ul class="list-group">
       <li
-        v-for="(attendee, index) in event.attendees"
+        v-for="(attendee, index) in evento.attendees"
         :key="index"
         class="list-item"
       >
@@ -30,25 +30,17 @@
 
 .
 <script>
-import EventoServicio from '@/services/EventoServicio.js'
+import { mapState } from 'vuex'
 
 export default {
+  name: 'MostrarEvento',
   props: ['id'],
-  data() {
-    return {
-      event: {},
-    }
-  },
 
   created() {
-    EventoServicio.getEvento(this.id)
-      .then((response) => {
-        this.event = response.data
-      })
-      .catch((error) => {
-        console.log(error.response)
-      })
+    this.$store.dispatch('fetchEvento', this.id)
   },
+
+  computed: mapState(['evento']),
 }
 </script>
 

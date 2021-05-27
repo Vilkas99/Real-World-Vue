@@ -7,33 +7,52 @@
       :key="eventoBaseDatos.id"
       :evento="eventoBaseDatos"
     />
-    <BaseIcon />
+
+    <template v-if="page != 1">
+      <router-link
+        :to="{ name: 'lista-evento', query: { page: page - 1 } }"
+        rel="prev"
+      >
+        Página anterior
+      </router-link>
+    </template>
+    |
+
+    <template v-if="totalElementos < total">
+      <router-link
+        :to="{ name: 'lista-evento', query: { page: page + 1 } }"
+        rel="next"
+      >
+        Página siguiente
+      </router-link>
+    </template>
   </div>
 </template>
 
 <script>
 import EventoCard from '@/components/EventoCard.vue'
-import EventoServicio from '@/services/EventoServicio.js'
+import { mapState } from 'vuex'
 
 export default {
   components: {
     EventoCard,
   },
 
-  data() {
-    return {
-      eventos: [],
-    }
-  },
-
   created() {
-    EventoServicio.getEvents()
-      .then((response) => {
-        this.eventos = response.data
-      })
-      .catch((error) => {
-        console.log('Hubo un error' + error.response)
-      })
+    this.$store.dispatch('fetchEventos', {
+      pePage: 3,
+      page: this.page,
+    })
+  },
+  computed: {
+    page() {
+      return parseInt(this.$route.query.page || 1)
+    },
+
+    totalElementos() {
+      return this.page * 3
+    },
+    ...mapState(['eventos', 'total']),
   },
 }
 </script>
