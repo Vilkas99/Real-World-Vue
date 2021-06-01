@@ -1,98 +1,176 @@
 <template>
   <div>
-    <ul>
-      <li v-for="categoria in categorias" :key="categoria">{{ categoria }}</li>
-    </ul>
-    <form @submit.prevent="crearEvento">
-      <label>Select a category</label>
-      <select v-model="evento.category">
-        <option v-for="cat in categorias" :key="cat">{{ cat }}</option>
-      </select>
+    <h1>Create an Event</h1>
+    <form @submit.prevent="createEvent">
+      <BaseSelect
+        label="Select a category"
+        :opciones="categories"
+        v-model="event.category"
+        @blur="$v.event.category.$touch()"
+        :class="{ error: $v.event.category.$error }"
+      />
+      <template v-if="$v.event.category.$error">
+        <p v-if="!$v.event.category.required" class="errorMessage">
+          La categoría es requerida
+        </p>
+      </template>
+
       <h3>Name & describe your event</h3>
-      <div class="field">
-        <label>Title</label>
-        <input
-          v-model="evento.title"
-          type="text"
-          placeholder="Add an event title"
-        />
-      </div>
-      <div class="field">
-        <label>Description</label>
-        <input
-          v-model="evento.description"
-          type="text"
-          placeholder="Add a
-        description"
-        />
-      </div>
+      <BaseInput
+        label="Title"
+        v-model="event.title"
+        type="text"
+        placeholder="Title"
+        class="field"
+        :class="{ error: $v.event.title.$error }"
+        @blur="$v.event.title.$touch()"
+      />
+
+      <template v-if="$v.event.title.$error">
+        <p v-if="!$v.event.title.required" class="errorMessage">
+          El título es requerido
+        </p>
+      </template>
+
+      <BaseInput
+        label="Description"
+        v-model="event.description"
+        type="text"
+        placeholder="Description"
+        class="field"
+        :class="{ error: $v.event.description.$error }"
+        @blur="$v.event.description.$touch()"
+      />
+
+      <template v-if="$v.event.description.$error">
+        <p v-if="!$v.event.description.required" class="errorMessage">
+          La descripcion es requerida
+        </p>
+      </template>
+
       <h3>Where is your event?</h3>
-      <div class="field">
-        <label>Location</label>
-        <input
-          v-model="evento.location"
-          type="text"
-          placeholder="Add a location"
-        />
-      </div>
+      <BaseInput
+        label="Location"
+        v-model="event.location"
+        type="text"
+        placeholder="Location"
+        class="field"
+        :class="{ error: $v.event.location.$error }"
+        @blur="$v.event.location.$touch()"
+      />
+
+      <template v-if="$v.event.location.$error">
+        <p v-if="!$v.event.location.required" class="errorMessage">
+          Se requiere de una localización
+        </p>
+      </template>
+
       <h3>When is your event?</h3>
+
       <div class="field">
         <label>Date</label>
-        <datepicker v-model="evento.date" placeholder="Select a date" />
+        <datepicker
+          v-model="event.date"
+          placeholder="Select a date"
+          @opened="$v.event.date.$touch()"
+        />
       </div>
-      <div class="field">
-        <label>Select a time</label>
-        <select v-model="evento.time">
-          <option v-for="time in tiempos" :key="time">{{ time }}</option>
-        </select>
-      </div>
-      <input type="submit" class="button -fill-gradient" value="Submit" />
+
+      <template v-if="$v.event.date.$error">
+        <p v-if="!$v.event.date.required" class="errorMessage">
+          Se requiere de una fecha
+        </p>
+      </template>
+
+      <BaseSelect
+        label="Select a time"
+        :opciones="times"
+        v-model="event.time"
+        class="field"
+        @blur="$v.event.time.$touch()"
+        :class="{ error: $v.event.time.$error }"
+      />
+
+      <template v-if="$v.event.time.$error">
+        <p v-if="!$v.event.time.required" class="errorMessage">
+          El tiempo es requerido
+        </p>
+      </template>
+
+      <BaseButton
+        type="submit"
+        buttonClass="-fill-gradient"
+        :disabled="$v.$anyError"
+        >Submit</BaseButton
+      >
+
+      <p class="errorMessage" v-if="$v.$anyError">
+        Por favor rellena los campos requeridos
+      </p>
     </form>
   </div>
 </template>
 
 <script>
 import Datepicker from 'vuejs-datepicker'
+import NProgress from 'nprogress'
+import { required } from 'vuelidate/lib/validators'
 
 export default {
   components: {
     Datepicker,
   },
-
   data() {
-    const tiempos = []
+    const times = []
     for (let i = 1; i <= 24; i++) {
-      tiempos.push(i + ':00')
+      times.push(i + ':00')
     }
     return {
-      tiempos,
-      categorias: this.$store.state.categorias,
-      evento: this.crearObjetoEvento(),
+      times,
+      categories: this.$store.state.categorias,
+      event: this.createFreshEventObject(),
     }
   },
 
-  methods: {
-    crearEvento() {
-      this.$store
-        .dispatch('crearEvento', this.evento)
-        .then(() => {
-          this.$router.push({
-            name: 'mostrar-evento',
-            params: { id: this.evento.id },
-          })
-          this.evento = this.crearObjetoEvento()
-        })
-        .catch((error) => console.log(error.response))
+  validations: {
+    event: {
+      category: { required },
+      title: { required },
+      description: { required },
+      location: { required },
+      date: { required },
+      time: { required },
     },
-    crearObjetoEvento() {
-      const usuario = this.$store.state.usuario
-      const id = Math.floor(Math.random() * 1000000)
+  },
+
+  methods: {
+    createEvent() {
+      this.$v.$touch()
+      if (!this.$v.$invalid) {
+        NProgress.start()
+        this.$store
+          .dispatch('evento/crearEvento', this.event)
+          .then(() => {
+            this.$router.push({
+              name: 'mostrar-evento',
+              params: { id: this.event.id },
+            })
+            this.event = this.createFreshEventObject()
+          })
+          .catch(() => {
+            NProgress.done()
+          })
+      }
+    },
+    createFreshEventObject() {
+      const user = this.$store.state.usuario.nombre
+      const id = Math.floor(Math.random() * 10000000)
 
       return {
         id: id,
-        user: usuario,
+        user: user,
         category: '',
-        organizer: usuario,
+        organizer: user,
         title: '',
         description: '',
         location: '',
@@ -104,9 +182,3 @@ export default {
   },
 }
 </script>
-
-<style lang="scss" scoped>
-.field {
-  margin-bottom: 24px;
-}
-</style>

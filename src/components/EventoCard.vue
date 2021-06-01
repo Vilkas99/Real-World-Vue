@@ -4,7 +4,9 @@
     :to="{ name: 'mostrar-evento', params: { id: evento.id } }"
   >
     <div class="event-card -shadow">
-      <span class="eyebrow">@{{ evento.time }} en {{ evento.date }}</span>
+      <span class="eyebrow"
+        >@{{ evento.time }} en {{ evento.date | date }}</span
+      >
       <h4 class="title">{{ evento.title }}</h4>
       <BaseIcon nombre="users"
         >{{ evento.attendees.length }} personas asistiendo</BaseIcon

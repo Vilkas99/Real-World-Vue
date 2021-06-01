@@ -1,9 +1,9 @@
 .
 <template>
   <div>
-    <h1>Lista de eventos</h1>
+    <h1>Eventos para {{ usuario.usuario.nombre }}</h1>
     <EventoCard
-      v-for="eventoBaseDatos in eventos"
+      v-for="eventoBaseDatos in evento.eventos"
       :key="eventoBaseDatos.id"
       :evento="eventoBaseDatos"
     />
@@ -18,7 +18,7 @@
     </template>
     |
 
-    <template v-if="totalElementos < total">
+    <template v-if="totalElementos < evento.total">
       <router-link
         :to="{ name: 'lista-evento', query: { page: page + 1 } }"
         rel="next"
@@ -32,27 +32,51 @@
 <script>
 import EventoCard from '@/components/EventoCard.vue'
 import { mapState } from 'vuex'
+import store from '@/store/index'
+
+const obtenerEventos = (to, next) => {
+  const paginaActual = parseInt(to.query.page || 1)
+  store
+    .dispatch('evento/fetchEventos', {
+      page: paginaActual,
+    })
+    .then(() => {
+      to.params.page = paginaActual
+      next()
+    })
+}
 
 export default {
+  props: {
+    page: {
+      type: Number,
+      required: true,
+    },
+  },
+
   components: {
     EventoCard,
   },
 
-  created() {
-    this.$store.dispatch('fetchEventos', {
-      pePage: 3,
-      page: this.page,
-    })
+  beforeRouteEnter(to, from, next) {
+    obtenerEventos(to, next)
   },
-  computed: {
-    page() {
-      return parseInt(this.$route.query.page || 1)
-    },
 
+  beforeRouteUpdate(to, from, next) {
+    obtenerEventos(to, next)
+  },
+
+  data() {
+    return {
+      palabra: '12',
+    }
+  },
+
+  computed: {
     totalElementos() {
       return this.page * 3
     },
-    ...mapState(['eventos', 'total']),
+    ...mapState(['evento', 'usuario']),
   },
 }
 </script>

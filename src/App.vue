@@ -1,16 +1,19 @@
 <template>
   <div id="app">
     <NavBar />
+    <NotificacionContainer />
     <router-view :key="$route.fullPath" />
   </div>
 </template>
 
 <script>
 import NavBar from '@/components/NavBar.vue'
+import NotificacionContainer from '@/components/NotificacionContainer.vue'
 
 export default {
   components: {
     NavBar,
+    NotificacionContainer,
   },
 }
 </script>
@@ -238,5 +241,13 @@ select:focus::ms-value {
 }
 select::ms-expand {
   opacity: 0;
+}
+
+.errorMessage {
+  color: red;
+}
+
+.error {
+  border-color: red;
 }
 </style>
